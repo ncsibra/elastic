@@ -12,7 +12,6 @@ import (
 	"net/http"
 	"net/url"
 	"reflect"
-	"strconv"
 	"strings"
 
 	"github.com/olivere/elastic/v7/uritemplates"
@@ -758,14 +757,11 @@ func (s *SearchHitScore) UnmarshalJSON(bytes []byte) error {
 		return nil
 	}
 
-	sb, err := strconv.Unquote(string(bytes))
-	if err != nil {
-		return err
-	}
+	sb := string(bytes)
 
-	if sb == "Infinity" {
+	if sb == `"Infinity"` {
 		*s = SearchHitScore(math.Inf(1))
-	} else if sb == "-Infinity" {
+	} else if sb == `"-Infinity"` {
 		*s = SearchHitScore(math.Inf(-1))
 	} else {
 		var f float64

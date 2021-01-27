@@ -749,7 +749,7 @@ func (s *SearchHitScore) MarshalJSON() ([]byte, error) {
 		return []byte("null"), nil
 	}
 
-	return json.Marshal(s)
+	return json.Marshal(float64(*s))
 }
 
 func (s *SearchHitScore) UnmarshalJSON(bytes []byte) error {
@@ -763,10 +763,13 @@ func (s *SearchHitScore) UnmarshalJSON(bytes []byte) error {
 	} else if sb == "-Infinity" {
 		*s = SearchHitScore(math.Inf(-1))
 	} else {
-		err := json.Unmarshal(bytes, s)
+		var f float64
+		err := json.Unmarshal(bytes, &f)
 		if err != nil {
 			return err
 		}
+
+		*s = SearchHitScore(f)
 	}
 
 	return nil

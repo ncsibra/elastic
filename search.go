@@ -8,6 +8,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"math"
 	"net/http"
 	"net/url"
 	"reflect"
@@ -741,9 +742,43 @@ func (h *TotalHits) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+type SearchHitScore float64
+
+func (s *SearchHitScore) MarshalJSON() ([]byte, error) {
+	if s == nil {
+		return []byte("null"), nil
+	}
+
+	return json.Marshal(float64(*s))
+}
+
+func (s *SearchHitScore) UnmarshalJSON(bytes []byte) error {
+	if len(bytes) == 0 || string(bytes) == "null" {
+		return nil
+	}
+
+	sb := string(bytes)
+
+	if sb == `"Infinity"` {
+		*s = SearchHitScore(math.Inf(1))
+	} else if sb == `"-Infinity"` {
+		*s = SearchHitScore(math.Inf(-1))
+	} else {
+		var f float64
+		err := json.Unmarshal(bytes, &f)
+		if err != nil {
+			return err
+		}
+
+		*s = SearchHitScore(f)
+	}
+
+	return nil
+}
+
 // SearchHit is a single hit.
 type SearchHit struct {
-	Score          *float64                       `json:"_score,omitempty"`   // computed score
+	Score          *SearchHitScore                `json:"_score,omitempty"`   // computed score
 	Index          string                         `json:"_index,omitempty"`   // index name
 	Type           string                         `json:"_type,omitempty"`    // type meta field
 	Id             string                         `json:"_id,omitempty"`      // external or internal
